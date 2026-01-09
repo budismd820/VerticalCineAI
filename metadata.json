@@ -1,0 +1,5 @@
+{
+  "name": "VerticalCine AI",
+  "description": "A cinematic storyboard generator for vertical video content using Gemini AI.",
+  "requestFramePermissions": []
+}
