@@ -49,7 +49,7 @@ export const generateStoryboardFromStory = async (params: StoryParams): Promise<
    * PENTING: Untuk alasan keamanan, API Key harus diambil dari environment variable.
    * Di Vercel: Masuk ke Project Settings > Environment Variables > Tambahkan Key: API_KEY
    */
-  const apiKey = process.env.API_KEY;
+  const apiKey = "AIzaSyDZ7vkcHKxLSkQpSIwfe0onyjwAg8RFqxw";
 
   if (!apiKey || apiKey === "undefined") {
     throw new Error("API_KEY tidak terdeteksi. Silakan tambahkan 'API_KEY' di Environment Variables Vercel Anda agar aplikasi bisa berjalan setelah di-deploy.");
