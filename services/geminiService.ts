@@ -2,7 +2,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { StoryboardResponse } from "../types";
 
-// Helper function to convert browser File objects to the format expected by GenAI SDK
+// Fungsi untuk konversi file ke format yang dikenali AI
 const fileToGenerativePart = async (file: File) => {
   const base64EncodedDataPromise = new Promise<string>((resolve) => {
     const reader = new FileReader();
@@ -45,10 +45,14 @@ export interface StoryParams {
 }
 
 export const generateStoryboardFromStory = async (params: StoryParams): Promise<StoryboardResponse> => {
-  // Validasi keberadaan API Key sebelum inisialisasi
+  /**
+   * PENTING: Untuk alasan keamanan, API Key harus diambil dari environment variable.
+   * Di Vercel: Masuk ke Project Settings > Environment Variables > Tambahkan Key: API_KEY
+   */
   const apiKey = process.env.API_KEY;
+
   if (!apiKey || apiKey === "undefined") {
-    throw new Error("API_KEY tidak ditemukan. Pastikan Anda telah menambahkannya di Environment Variables Vercel.");
+    throw new Error("API_KEY tidak terdeteksi. Silakan tambahkan 'API_KEY' di Environment Variables Vercel Anda agar aplikasi bisa berjalan setelah di-deploy.");
   }
 
   const ai = new GoogleGenAI({ apiKey });
@@ -143,6 +147,6 @@ export const generateStoryboardFromStory = async (params: StoryParams): Promise<
     return JSON.parse(result.trim());
   } catch (error: any) {
     console.error("Gemini Error Detail:", error);
-    throw new Error(error.message || "Failed to generate storyboard. Check network or API Key.");
+    throw new Error(error.message || "Gagal membuat storyboard. Periksa koneksi atau API Key Anda.");
   }
 };

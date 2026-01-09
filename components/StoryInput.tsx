@@ -1,5 +1,6 @@
+
 import React, { useState, useRef } from 'react';
-import { Upload, Image as ImageIcon, Wand2, Sparkles, Globe, Clock, Clapperboard, Trash2, Zap } from 'lucide-react';
+import { Upload, Image as ImageIcon, Wand2, Sparkles, Globe, Clock, Clapperboard, Trash2, Zap, Trees } from 'lucide-react';
 
 // --- KONFIGURASI MENU ---
 const LANGUAGES = ['Indonesia', 'English', 'Korean'];
@@ -11,6 +12,11 @@ const DURATIONS = [
 ];
 
 const VISUAL_STYLES = [
+  { 
+    id: 'rainforest_noir', 
+    label: 'Rainforest Noir (Dark & Sad)', 
+    prompt: 'Cinematic Rainforest, dark moody atmosphere, thick fog, ancient soldiers, damp environment, sad emotional lighting, muted colors, teal and orange highlights, 8k masterpiece, photorealistic, epic scale, hyper-detailed moss and rain droplets.' 
+  },
   { 
     id: 'cinematic', 
     label: 'Cinematic Movie (Netflix Look)', 
@@ -41,34 +47,9 @@ const VISUAL_STYLES = [
     label: 'Claymotion', 
     prompt: 'Claymation style, stop-motion animation aesthetic, handcrafted clay textures, finger-molded details, Aardman style, playful tactile feel, studio lighting, 8k masterpiece.' 
   },
-  { 
-    id: 'felt', 
-    label: 'Wool / Felt', 
-    prompt: 'Needle felted art style, handcrafted wool textures, fuzzy surface, textile art aesthetic, soft fibers, intricate fabric details, macro photography, warm cozy lighting.' 
-  },
-  { 
-    id: 'papercut', 
-    label: 'Paper Cut', 
-    prompt: 'Papercut art, layered paper style, 3D paper craft aesthetic, sharp edges, distinct shadows between paper layers, vibrant craft paper textures, intricate cutout details.' 
-  },
-  { 
-    id: 'lowpoly', 
-    label: 'Low Poly', 
-    prompt: 'Low poly art style, geometric polygonal shapes, stylized triangular surfaces, minimalist digital art, vibrant colors, clean aesthetic, flat shaded look, game engine style.' 
-  },
-  { 
-    id: 'origami', 
-    label: 'Origami', 
-    prompt: 'Origami art, Japanese paper folding style, clean sharp folds, delicate paper texture, geometric paper construction, soft studio lighting, artistic paper craft, 8k.' 
-  },
-  { 
-    id: '3drender', 
-    label: '3D Render', 
-    prompt: 'Professional 3D Render, Octane Render, Ray Tracing, PBR materials, hyper-detailed textures, volumetric lighting, Unreal Engine 5 aesthetic, photorealistic digital art, high-end CGI.' 
-  },
 ];
 
-const NARRATOR_STYLES = ['Cinematic Narrator', 'Casual / Teman Curhat', 'Energetic / Hype', 'Horror / Seram', 'Inspirational'];
+const NARRATOR_STYLES = ['Cinematic Narrator', 'Casual / Teman Curhat', 'Energetic / Hype', 'Horror / Seram', 'Inspirational', 'Poetic / Sad'];
 const RATIOS = [
   { label: 'Vertical (9:16) - TikTok/Reels', value: '9:16' },
   { label: 'Horizontal (16:9) - YouTube', value: '16:9' }
@@ -133,14 +114,16 @@ const StoryInput: React.FC<StoryInputProps> = ({ onGenerate, isLoading }) => {
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Tulis ide kontenmu... (Contoh: 'Fakta mengerikan tentang laut dalam', atau 'Cara cepat kaya di usia 20')"
+          placeholder="Tulis ide kontenmu... (Contoh: 'Pasukan Romawi baris di hutan hujan, suasana gelap dan sedih')"
           className="w-full p-4 rounded-xl bg-neutral-900 border border-neutral-700 text-white placeholder-neutral-600 focus:ring-2 focus:ring-indigo-600 focus:border-transparent h-32 resize-none transition-all font-medium"
         />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         <div>
-          <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-1">Visual Style</label>
+          <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-1 flex items-center gap-1">
+            <Trees size={10}/> Visual Style
+          </label>
           <select value={selectedStyle.id} onChange={(e) => setSelectedStyle(VISUAL_STYLES.find(s => s.id === e.target.value) || VISUAL_STYLES[0])} className={selectClass}>
             {VISUAL_STYLES.map(s => <option key={s.id} value={s.id} className={optionClass}>{s.label}</option>)}
           </select>
@@ -162,7 +145,7 @@ const StoryInput: React.FC<StoryInputProps> = ({ onGenerate, isLoading }) => {
 
         <div className="lg:col-span-2">
           <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-1 flex items-center gap-1 text-red-400">
-            <Clock size={10}/> Target Duration (Critical for Retention)
+            <Clock size={10}/> Target Duration
           </label>
           <select value={duration.value} onChange={(e) => setDuration(DURATIONS.find(d => d.value === e.target.value) || DURATIONS[0])} className={`${selectClass} border-red-900/50 bg-red-900/10 text-red-200 font-bold`}>
             {DURATIONS.map(d => <option key={d.value} value={d.value} className={optionClass}>{d.label}</option>)}
@@ -177,8 +160,7 @@ const StoryInput: React.FC<StoryInputProps> = ({ onGenerate, isLoading }) => {
         </div>
         
         <div className="lg:col-span-3">
-           <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-1">Referensi Visual (Max 3 Foto/Video)</label>
-           
+           <label className="block text-[10px] font-bold text-neutral-500 uppercase mb-1">Referensi Visual (Max 3 Foto)</label>
            <div className="flex gap-3 flex-wrap">
              {files.length < 3 && (
                <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-neutral-700 rounded-lg p-3 flex items-center justify-center cursor-pointer hover:bg-neutral-800 hover:border-indigo-500/50 transition-all group/upload flex-1 min-w-[150px]">
@@ -188,7 +170,6 @@ const StoryInput: React.FC<StoryInputProps> = ({ onGenerate, isLoading }) => {
                   </span>
                </div>
              )}
-
              {files.map((f, i) => (
                 <div key={i} className="bg-neutral-800 border border-neutral-700 rounded-lg p-2 flex items-center gap-2 pr-3 animate-fade-in">
                    <div className="w-8 h-8 bg-neutral-900 rounded flex items-center justify-center text-indigo-500">
@@ -203,7 +184,7 @@ const StoryInput: React.FC<StoryInputProps> = ({ onGenerate, isLoading }) => {
       </div>
 
       <button onClick={handleSubmit} disabled={isLoading || !text} className="w-full bg-gradient-to-r from-indigo-700 to-purple-700 hover:from-indigo-600 hover:to-purple-600 text-white font-bold py-4 rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-indigo-900/30 active:scale-[0.99]">
-        {isLoading ? <span className="animate-pulse">Optimizing Hook & Viral Score...</span> : <><Wand2 size={20} /> GENERATE VIRAL SHORTS</>}
+        {isLoading ? <span className="animate-pulse">Analyzing Cinematography...</span> : <><Wand2 size={20} /> GENERATE STORYBOARD</>}
       </button>
     </div>
   );

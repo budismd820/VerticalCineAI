@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { Film, AlertCircle, Trash2, Printer, Wand2, Sparkles, LayoutPanelLeft, Quote, ScrollText, Loader2 } from 'lucide-react';
+import { Film, AlertCircle, Trash2, Printer, Wand2, Sparkles, LayoutPanelLeft, Quote, ScrollText, Loader2, ShieldAlert, Key } from 'lucide-react';
 import StoryInput from './components/StoryInput';
 import { ShotCard } from './components/ShotCard';
 import { generateStoryboardFromStory, StoryParams } from './services/geminiService';
@@ -39,9 +40,9 @@ const App: React.FC = () => {
       setProgress(0);
       interval = setInterval(() => {
         setProgress((prev) => {
-          if (prev < 30) return prev + 1; // Analisis awal
-          if (prev < 70) return prev + 0.5; // Proses multimodal
-          if (prev < 95) return prev + 0.2; // Finalisasi JSON
+          if (prev < 30) return prev + 1;
+          if (prev < 70) return prev + 0.5;
+          if (prev < 95) return prev + 0.2;
           return prev;
         });
       }, 200);
@@ -65,8 +66,6 @@ const App: React.FC = () => {
   const handleGenerate = async (inputData: StoryParams) => {
     setLoading(true);
     setError(null);
-    // Kita tidak langsung menghapus data lama agar UI tidak kosong melompong saat proses
-    
     try {
       const response = await generateStoryboardFromStory(inputData);
       setShots(response.shots || []);
@@ -74,11 +73,13 @@ const App: React.FC = () => {
       setFullNarrative(response.full_narrative || null);
     } catch (err: any) {
       console.error("App Error:", err);
-      setError(`Gagal: ${err.message}. Coba lagi dengan input yang lebih spesifik.`);
+      setError(err.message || "Unknown error occurred.");
     } finally {
       setLoading(false);
     }
   };
+
+  const isApiKeyError = error?.includes("API_KEY");
 
   return (
     <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-indigo-500/30 selection:text-indigo-200 pb-32">
@@ -143,22 +144,30 @@ const App: React.FC = () => {
         </div>
 
         {error && (
-          <div className="bg-red-950/30 text-red-400 p-6 rounded-2xl mb-12 flex items-center gap-4 border border-red-900/50 relative z-10 animate-shake shadow-2xl">
-            <AlertCircle size={32} className="opacity-50" />
-            <div>
-              <p className="font-black text-sm uppercase tracking-widest">Production Error</p>
-              <p className="text-xs font-medium opacity-80">{error}</p>
+          <div className={`p-6 rounded-2xl mb-12 flex flex-col md:flex-row items-center gap-6 border relative z-10 animate-shake shadow-2xl transition-colors ${isApiKeyError ? 'bg-orange-950/30 border-orange-500/50 text-orange-400' : 'bg-red-950/30 border-red-900/50 text-red-400'}`}>
+            {isApiKeyError ? <Key size={48} className="opacity-50" /> : <ShieldAlert size={48} className="opacity-50" />}
+            <div className="flex-1">
+              <p className="font-black text-sm uppercase tracking-widest mb-1">{isApiKeyError ? "Deployment Guide" : "Production Error"}</p>
+              <p className="text-sm font-medium opacity-90">{error}</p>
+              {isApiKeyError && (
+                <div className="mt-4 p-4 bg-black/40 rounded-xl border border-white/5 text-xs text-neutral-300 leading-relaxed">
+                  <p className="font-bold text-white mb-2 underline">Solusi ke Vercel:</p>
+                  <ol className="list-decimal list-inside space-y-1">
+                    <li>Buka <b>Vercel Dashboard</b> Anda.</li>
+                    <li>Pilih project ini &gt; <b>Settings</b> &gt; <b>Environment Variables</b>.</li>
+                    <li>Tambah <b>Key:</b> <code className="bg-neutral-800 px-1 rounded text-orange-300">API_KEY</code></li>
+                    <li>Tambah <b>Value:</b> <code className="bg-neutral-800 px-1 rounded text-orange-300">AIzaSy... (API Key Anda)</code></li>
+                    <li>Klik <b>Save</b> dan lakukan <b>Redeploy</b>.</li>
+                  </ol>
+                </div>
+              )}
             </div>
           </div>
         )}
 
         {(summary || fullNarrative || shots.length > 0) && (
           <div className="animate-fade-in-up relative z-10 space-y-20">
-            
-            {/* DIRECTOR'S SUITE */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-               
-               {/* 1. SUMMARY PANEL */}
                {summary && (
                   <section className="relative overflow-hidden group h-full">
                     <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-3xl blur opacity-10"></div>
@@ -175,8 +184,6 @@ const App: React.FC = () => {
                     </div>
                   </section>
                )}
-
-               {/* 2. FULL NARRATIVE PANEL */}
                {fullNarrative && (
                   <section className="relative overflow-hidden group h-full">
                     <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-indigo-600 rounded-3xl blur opacity-10"></div>
@@ -197,7 +204,6 @@ const App: React.FC = () => {
                )}
             </div>
 
-            {/* SEQUENCE BREAKDOWN */}
             {shots.length > 0 && (
               <section>
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 pb-6 border-b border-white/5">
