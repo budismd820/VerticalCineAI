@@ -156,18 +156,18 @@ const App: React.FC = () => {
               {isApiKeyError && (
                 <div className="mt-4 p-4 bg-black/40 rounded-xl border border-white/5 text-xs text-neutral-300 leading-relaxed">
                   <p className="font-bold text-white mb-2 underline">Cara Fix Environment Variable:</p>
-                  <ol className="list-decimal list-inside space-y-1">
-                    <li>Buka <b>Vercel Settings</b> > <b>Environment Variables</b>.</li>
+                  <ol className="list-decimal list-inside space-y-2">
+                    <li>Buka <b>Vercel Settings</b> {" > "} <b>Environment Variables</b>.</li>
                     <li>Tambah <b>Key:</b> <code className="bg-neutral-800 px-1 rounded text-orange-300">API_KEY</code></li>
-                    <li>Tambah <b>Value:</b> <code className="bg-neutral-800 px-1 rounded text-orange-300">AIzaSy... (API Key Anda)</code></li>
-                    <li>Lakukan <b>Redeploy</b> project Anda.</li>
+                    <li>Tambah <b>Value:</b> <code className="bg-neutral-800 px-1 rounded text-orange-300 italic">TEMPEL_KEY_ANDA_DISINI</code></li>
+                    <li>Lakukan <b>Redeploy</b> project Anda agar perubahan tersimpan.</li>
                   </ol>
                 </div>
               )}
 
               {isQuotaError && (
                 <div className="mt-4 text-xs opacity-70 italic">
-                  * Tip: Akun Gemini Free Tier memiliki batas limit per menit/hari. Tunggu 60 detik sebelum mencoba lagi, atau upgrade ke API berbayar.
+                  * Tip: Akun Gemini Free Tier memiliki batas limit per menit/hari. Tunggu 60 detik sebelum mencoba lagi, atau gunakan API Key berbayar untuk akses tanpa batas.
                 </div>
               )}
             </div>
