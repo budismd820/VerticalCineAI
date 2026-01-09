@@ -45,7 +45,7 @@ export interface StoryParams {
 }
 
 export const generateStoryboardFromStory = async (params: StoryParams): Promise<StoryboardResponse> => {
-  const apiKey = "AIzaSyDZ7vkcHKxLSkQpSIwfe0onyjwAg8RFqxw";
+  const apiKey = process.env.API_KEY;
 
   if (!apiKey || apiKey === "undefined") {
     throw new Error("API_KEY_MISSING: Masukkan API_KEY di Environment Variables.");
