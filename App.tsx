@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Film, AlertCircle, Trash2, Printer, Wand2, Sparkles, LayoutPanelLeft, Quote, ScrollText, Loader2, ShieldAlert, Key } from 'lucide-react';
+import { Film, AlertCircle, Trash2, Printer, Wand2, Sparkles, LayoutPanelLeft, Quote, ScrollText, Loader2, ShieldAlert, Key, Clock9 } from 'lucide-react';
 import StoryInput from './components/StoryInput';
 import { ShotCard } from './components/ShotCard';
 import { generateStoryboardFromStory, StoryParams } from './services/geminiService';
@@ -79,7 +79,8 @@ const App: React.FC = () => {
     }
   };
 
-  const isApiKeyError = error?.includes("API_KEY");
+  const isApiKeyError = error?.includes("API_KEY_MISSING");
+  const isQuotaError = error?.includes("QUOTA_EXCEEDED");
 
   return (
     <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-indigo-500/30 selection:text-indigo-200 pb-32">
@@ -144,21 +145,29 @@ const App: React.FC = () => {
         </div>
 
         {error && (
-          <div className={`p-6 rounded-2xl mb-12 flex flex-col md:flex-row items-center gap-6 border relative z-10 animate-shake shadow-2xl transition-colors ${isApiKeyError ? 'bg-orange-950/30 border-orange-500/50 text-orange-400' : 'bg-red-950/30 border-red-900/50 text-red-400'}`}>
-            {isApiKeyError ? <Key size={48} className="opacity-50" /> : <ShieldAlert size={48} className="opacity-50" />}
+          <div className={`p-6 rounded-2xl mb-12 flex flex-col md:flex-row items-center gap-6 border relative z-10 animate-shake shadow-2xl transition-colors ${isApiKeyError ? 'bg-orange-950/30 border-orange-500/50 text-orange-400' : isQuotaError ? 'bg-amber-950/30 border-amber-500/50 text-amber-400' : 'bg-red-950/30 border-red-900/50 text-red-400'}`}>
+            {isApiKeyError ? <Key size={48} className="opacity-50" /> : isQuotaError ? <Clock9 size={48} className="opacity-50" /> : <ShieldAlert size={48} className="opacity-50" />}
             <div className="flex-1">
-              <p className="font-black text-sm uppercase tracking-widest mb-1">{isApiKeyError ? "Deployment Guide" : "Production Error"}</p>
+              <p className="font-black text-sm uppercase tracking-widest mb-1">
+                {isApiKeyError ? "Deployment Error" : isQuotaError ? "AI Quota Exhausted" : "Production Error"}
+              </p>
               <p className="text-sm font-medium opacity-90">{error}</p>
+              
               {isApiKeyError && (
                 <div className="mt-4 p-4 bg-black/40 rounded-xl border border-white/5 text-xs text-neutral-300 leading-relaxed">
-                  <p className="font-bold text-white mb-2 underline">Solusi ke Vercel:</p>
+                  <p className="font-bold text-white mb-2 underline">Cara Fix Environment Variable:</p>
                   <ol className="list-decimal list-inside space-y-1">
-                    <li>Buka <b>Vercel Dashboard</b> Anda.</li>
-                    <li>Pilih project ini &gt; <b>Settings</b> &gt; <b>Environment Variables</b>.</li>
+                    <li>Buka <b>Vercel Settings</b> > <b>Environment Variables</b>.</li>
                     <li>Tambah <b>Key:</b> <code className="bg-neutral-800 px-1 rounded text-orange-300">API_KEY</code></li>
                     <li>Tambah <b>Value:</b> <code className="bg-neutral-800 px-1 rounded text-orange-300">AIzaSy... (API Key Anda)</code></li>
-                    <li>Klik <b>Save</b> dan lakukan <b>Redeploy</b>.</li>
+                    <li>Lakukan <b>Redeploy</b> project Anda.</li>
                   </ol>
+                </div>
+              )}
+
+              {isQuotaError && (
+                <div className="mt-4 text-xs opacity-70 italic">
+                  * Tip: Akun Gemini Free Tier memiliki batas limit per menit/hari. Tunggu 60 detik sebelum mencoba lagi, atau upgrade ke API berbayar.
                 </div>
               )}
             </div>

@@ -2,7 +2,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { StoryboardResponse } from "../types";
 
-// Fungsi untuk konversi file ke format yang dikenali AI
 const fileToGenerativePart = async (file: File) => {
   const base64EncodedDataPromise = new Promise<string>((resolve) => {
     const reader = new FileReader();
@@ -18,18 +17,19 @@ const fileToGenerativePart = async (file: File) => {
 };
 
 const SYSTEM_INSTRUCTION = `
-You are the "Master Cinematic Director & Visual Continuity Expert". 
+You are a "World-Class Cinematic Director & Scriptwriter". Your goal is to create high-end vertical video storyboards with perfect consistency.
 
-STRICT VISUAL CONSISTENCY ENGINE:
-1. IMAGE ANALYSIS: If images are provided, you MUST analyze the subject's DNA (facial structure, hair color/style, clothing details, object textures).
-2. PERSISTENCE RULE: In every "visual_prompt", you MUST explicitly describe the same traits from the reference images. Use: "The exact same person from reference with [trait A] and [trait B], wearing the same [outfit details]".
-3. STYLE ADHERENCE: You MUST integrate the specific visual style parameters provided (e.g., "Photorealistic 8K", "Anime Style") into every single visual_prompt without exception.
-4. ZERO DEVIATION: Do not change the colors, shapes, or structure of the subjects provided.
+### STEP 1: THINKING PHASE (Internal Planning)
+Before generating JSON, you must plan:
+1. CHARACTER DNA: If images are provided, analyze features (scars, armor details, helmet type, cape color).
+2. NARRATIVE ARC: Ensure the story flows from a "Hook" to a "Visual Climax".
+3. CINEMATOGRAPHY: Vary the shots (Extreme Long Shot for scale, ECU for emotion, Dutch Angle for tension).
 
-STORYBOARD ARCHITECTURE:
-1. summary: A 2-sentence high-level vision of the content.
-2. full_narrative: A separate, complete, and cohesive script/narration for the entire video duration (\${duration}). This should be formatted for a voice actor or audience presentation.
-3. shots: A technical breakdown that follows the full_narrative step-by-step.
+### STEP 2: GENERATION RULES
+1. VISUAL CONSISTENCY: Every "visual_prompt" must explicitly mention the core traits of the character/environment to prevent AI drifting.
+2. STYLE SYNERGY: Force the [MANDATORY VISUAL STYLE] into every shot description.
+3. NARRATIVE: The "full_narrative" must be poetic, engaging, and match the "narratorStyle".
+4. TECHNICAL: Ensure "timing_sec" matches the total "duration".
 
 Respond ONLY in valid JSON format.
 `;
@@ -45,14 +45,10 @@ export interface StoryParams {
 }
 
 export const generateStoryboardFromStory = async (params: StoryParams): Promise<StoryboardResponse> => {
-  /**
-   * PENTING: Untuk alasan keamanan, API Key harus diambil dari environment variable.
-   * Di Vercel: Masuk ke Project Settings > Environment Variables > Tambahkan Key: API_KEY
-   */
   const apiKey = "AIzaSyDZ7vkcHKxLSkQpSIwfe0onyjwAg8RFqxw";
 
   if (!apiKey || apiKey === "undefined") {
-    throw new Error("API_KEY tidak terdeteksi. Silakan tambahkan 'API_KEY' di Environment Variables Vercel Anda agar aplikasi bisa berjalan setelah di-deploy.");
+    throw new Error("API_KEY_MISSING: Masukkan API_KEY di Environment Variables.");
   }
 
   const ai = new GoogleGenAI({ apiKey });
@@ -66,12 +62,6 @@ export const generateStoryboardFromStory = async (params: StoryParams): Promise<
     - Language: ${language}
     - Tone: ${narratorStyle}
     - Aspect Ratio: ${ratio}
-    
-    MISSION: 
-    - Create a FULL NARRATIVE script for the audience.
-    - Create a detailed SHOT BREAKDOWN.
-    - For EVERY visual_prompt, you MUST start with: "${stylePrompt}". 
-    - If reference images are provided, maintain absolute consistency of characters and objects.
   `;
 
   try {
@@ -82,17 +72,19 @@ export const generateStoryboardFromStory = async (params: StoryParams): Promise<
     }
 
     const response = await ai.models.generateContent({
-      model: "gemini-3-pro-preview",
+      model: "gemini-3-flash-preview",
       contents: [{ parts: parts }],
       config: {
         systemInstruction: SYSTEM_INSTRUCTION.replace('${duration}', duration || '30s'),
         responseMimeType: "application/json",
-        thinkingConfig: { thinkingBudget: 32768 },
+        // MENGAKTIFKAN MODE BERPIKIR: 
+        // Ini membuat AI merencanakan konsistensi sebelum menulis kodenya.
+        thinkingConfig: { thinkingBudget: 16000 }, 
         responseSchema: {
           type: Type.OBJECT,
           properties: {
             summary: { type: Type.STRING },
-            full_narrative: { type: Type.STRING, description: "Complete script for the entire video" },
+            full_narrative: { type: Type.STRING },
             shots: {
               type: Type.ARRAY,
               items: {
@@ -114,29 +106,24 @@ export const generateStoryboardFromStory = async (params: StoryParams): Promise<
                         properties: {
                           intonation: { type: Type.STRING },
                           gesture: { type: Type.STRING }
-                        },
-                        propertyOrdering: ["intonation", "gesture"]
+                        }
                       }
                     },
-                    required: ["mode", "sfx_ambience"],
-                    propertyOrdering: ["mode", "sfx_ambience", "transcript", "voice_gender", "production_analysis"]
+                    required: ["mode", "sfx_ambience"]
                   },
                   camera_options: {
                     type: Type.OBJECT,
                     properties: {
                       is_handheld_shake: { type: Type.BOOLEAN },
                       is_multi_camera: { type: Type.BOOLEAN }
-                    },
-                    propertyOrdering: ["is_handheld_shake", "is_multi_camera"]
+                    }
                   }
                 },
-                required: ["shot_number", "timing_sec", "camera_angle", "visual_prompt", "audio_data"],
-                propertyOrdering: ["shot_number", "timing_sec", "camera_angle", "visual_prompt", "audio_data", "camera_options"]
+                required: ["shot_number", "timing_sec", "camera_angle", "visual_prompt", "audio_data"]
               }
             }
           },
-          required: ["summary", "full_narrative", "shots"],
-          propertyOrdering: ["summary", "full_narrative", "shots"]
+          required: ["summary", "full_narrative", "shots"]
         },
       },
     });
@@ -147,6 +134,9 @@ export const generateStoryboardFromStory = async (params: StoryParams): Promise<
     return JSON.parse(result.trim());
   } catch (error: any) {
     console.error("Gemini Error Detail:", error);
-    throw new Error(error.message || "Gagal membuat storyboard. Periksa koneksi atau API Key Anda.");
+    if (error.message?.includes("429") || error.message?.includes("quota")) {
+       throw new Error("QUOTA_EXCEEDED: Batas penggunaan habis. Tunggu 1 menit.");
+    }
+    throw new Error(error.message || "Terjadi kesalahan sistem AI.");
   }
 };
